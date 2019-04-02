@@ -31,6 +31,7 @@ void CropImage::cropImageFrame(){
     cv::Mat imgThresh;
     // cv::cvtColor(imgFrame1Copy, imgFrame1Copy, cv::COLOR_BGR2GRAY);
     cv::GaussianBlur(imgFrame1Copy, imgFrame1Copy, cv::Size(5, 5), 0);
+    
     double min, max;
     cv::Point minp, maxp;
     cv::minMaxLoc(imgFrame1Copy, &min, &max, &minp, &maxp);
@@ -95,7 +96,12 @@ void CropImage::cropImageFrame(){
     // cv::waitKey();
     std::sort(blobs.begin(), blobs.end(), maxArea);
 // std::cerr << "blobsize = " << blobs.size() << std::endl;
-    this->image = image(blobs[0].boundingRect);
+    if(blobs.size()>0)
+        this->image = image(blobs[0].boundingRect);
+    else{
+        std::cerr << std::endl << "no detected objects ! ."<< std::endl;
+        exit(1);
+    }
 // std::cerr << "starting detection operation ..." << std::endl;
     this->objectsCoordinates = blobs;
 
