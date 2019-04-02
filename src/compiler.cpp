@@ -155,7 +155,9 @@ void imageFileProcess(std::string imagePath, char imageFlage){
         fw = img.cols;
         fh = img.rows;
         // cv::resize(img, img, cv::Size(fw - (fw*50/100), fh - (fh*50/100)));
+        cv::resize(img, img, cv::Size(600, 900));
         // std::cerr << img.cols << "  " << img.rows << std::endl;
+        
         CropImage cImg(img, 4);
         
         
