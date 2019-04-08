@@ -32,6 +32,23 @@ std::string const EMPTY_IMAGE_PATH = "crop/empty.jpg";
 
 int cn = 0;
 
+struct DirectoryNotFoundException : public exception
+{
+    DirectoryNotFoundException(std::string &file){
+        message = file + " can not open.";
+    }
+    virtual const char* what()const throw(){
+        return message.c_str();
+    }
+private:
+    std::string message;
+};
+
+enum struct Flages{
+    drawnFlage,
+    paperFlage
+};
+
 // Remove the bounding boxes with low confidence using non-maxima suppression
 void postprocess(Mat& frame, const vector<Mat>& out, std::vector<std::string> &classes, bool &foundFlage, 
 Blob objectBox);
@@ -61,29 +78,13 @@ std::string getFileName(std::string path);
 bool is_file(const char* path);
 
 //run detection on one file
-void imageFileProcess(std::string imagePath, char imageFlage);
+void imageFileProcess(std::string imagePath, Flages imageFlage);
 
 //the main function to classify the image
-void runOperation(int end, char imageFlage, char *argv[]);
+void runOperation(int end, Flages imageFlage, char *argv[]);
 
 static vector<string> weightsVector, namesVector, cfgVector;
 
-struct DirectoryNotFoundException : public exception
-{
-    DirectoryNotFoundException(std::string &file){
-        message = file + " can not open.";
-    }
-    virtual const char* what()const throw(){
-        return message.c_str();
-    }
-private:
-    std::string message;
-};
-
-struct Flages{
-    char static const drawnFlage = 'd';
-    char static const paperFlage = 'p';
-};
 
 
 
@@ -120,13 +121,13 @@ int main(int argc, char* argv[]){
     std::time_t end_time = std::chrono::system_clock::to_time_t(t2);
 
     std::cout << "finished computation at " << std::ctime(&end_time)
-              << "elapsed time: " << elapsed_seconds.count() << "s\n";
+              << "elapsed time: " << elapsed_seconds.count() << "s" << std::endl;
 
     return 0;
 }
 
 
-void runOperation(int end, char imageFlage, char *argv[]){
+void runOperation(int end, Flages imageFlage, char *argv[]){
     for(int i =2; i<end; ++i){
         std::cerr << "itration: " <<i<< std::endl;
         if(is_file(argv[i])){
@@ -145,7 +146,7 @@ void runOperation(int end, char imageFlage, char *argv[]){
     }
 }
 
-void imageFileProcess(std::string imagePath, char imageFlage){
+void imageFileProcess(std::string imagePath, Flages imageFlage){
     std::cerr << std::endl << "imagePath: " << imagePath << std::endl;
     ifstream file(imagePath);
     if(file.good()){
