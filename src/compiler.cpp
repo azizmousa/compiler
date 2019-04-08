@@ -8,6 +8,8 @@
 
 #include <string>
 #include <time.h>
+#include <thread>
+#include <sstream>
 
 #include <opencv2/dnn.hpp>
 #include <opencv2/imgproc.hpp>
@@ -28,7 +30,7 @@ int inpWidth = 416;  // Width of network's input image
 int inpHeight = 416; // Height of network's input image
 std::string OBJECTS_OUTPUT_FILE;
 
-std::string const EMPTY_IMAGE_PATH = "crop/empty.jpg";
+std::string const EMPTY_IMAGE_PATH = "crop/";
 
 int cn = 0;
 
@@ -83,14 +85,14 @@ void imageFileProcess(std::string imagePath, Flages imageFlage);
 //the main function to classify the image
 void runOperation(int end, Flages imageFlage, char *argv[]);
 
+void executeThread(cv::Mat objectsImage, int width, int height, Blob box);
+
 static vector<string> weightsVector, namesVector, cfgVector;
 
 
 
 
 int main(int argc, char* argv[]){
-
-
 
     auto t1 = std::chrono::system_clock::now();
     if(argc < 2){
@@ -190,28 +192,50 @@ void imageFileProcess(std::string imagePath, Flages imageFlage){
             vector<Blob> objectsBoxs;
             cObjects.getOjectsCoordinates(objectsBoxs);
             
+            std::thread *imgThreads = new std::thread[objectsBoxs.size()];
+
             for(size_t i =0; i<objectsBoxs.size();++i){
-                foundFlage = false;
-                cv::Mat emptyImage(height, width, CV_8UC1, Scalar(255, 255, 255));
-                std::cerr << objectsBoxs[i].boundingRect << std::endl;
-                cv::Mat obj = objectsImage(objectsBoxs[i].boundingRect);
-                obj.copyTo(emptyImage(cv::Rect( objectsBoxs[i].boundingRect.x,  objectsBoxs[i].boundingRect.y, obj.cols, obj.rows)));
-                cv::imwrite(EMPTY_IMAGE_PATH, emptyImage);
-                for(size_t j =0; j<weightsVector.size();++j){
-                    vector<string> classes;
-                    detectObjects(namesVector[j],cfgVector[j],weightsVector[j], EMPTY_IMAGE_PATH, classes, foundFlage, objectsBoxs[i]);
-                    if(foundFlage)
-                        break;
-                    //std::cerr << namesVector[i] << "\t" << cfgVector[i] << "\t" <<weightsVector[i]<<endl;
-                }
-                cv::rectangle(objectsImage, objectsBoxs[i].boundingRect, Scalar(255, 0, 0), 2);
-                cv::circle(objectsImage, objectsBoxs[i].centerPosition, 3, Scalar(0, 255, 0), -1);    
+                // bool *pff = false;
+                std::cerr << "starting thread number: " << i << std::endl;
+                *(imgThreads+i) = std::thread(executeThread, objectsImage, width, height, objectsBoxs[i]);
             }
+            for(size_t i =0; i<objectsBoxs.size();++i){
+                (imgThreads+i)->join();
+            }
+            delete [] imgThreads;
             cv::imwrite(cropedPath, objectsImage);   
         }
     }else{
         std::cout << imagePath << " file not found." << std::endl;
     }
+}
+
+// std::mutex mut;
+
+void executeThread(cv::Mat objectsImage, int width, int height, Blob box){
+    // std::lock_guard<std::mutex> lock(mut);
+    std::cerr << "debugging thread" << std::endl;
+    cv::Mat emptyImage(height, width, CV_8UC1, Scalar(255, 255, 255));
+    std::cerr << box.boundingRect << std::endl;
+    cv::Mat obj = objectsImage(box.boundingRect);
+    obj.copyTo(emptyImage(cv::Rect( box.boundingRect.x,  box.boundingRect.y, obj.cols, obj.rows)));
+    auto id = std::this_thread::get_id();
+    stringstream ss;
+    ss << id;
+    std::string threadEmptyPath = EMPTY_IMAGE_PATH + ss.str() + ".jpg";
+    std::cerr << "empty image path = " << threadEmptyPath << std::endl;
+    cv::imwrite(threadEmptyPath, emptyImage);
+    bool ff = false;
+    for(size_t j =0; j<weightsVector.size();++j){
+        vector<string> classes;
+        detectObjects(namesVector[j],cfgVector[j],weightsVector[j], threadEmptyPath, classes, ff, box);
+        // if(foundFlage)
+        //     break;
+        //std::cerr << namesVector[i] << "\t" << cfgVector[i] << "\t" <<weightsVector[i]<<endl;
+    }
+    cv::rectangle(objectsImage, box.boundingRect, Scalar(255, 0, 0), 2);
+    cv::circle(objectsImage, box.centerPosition, 3, Scalar(0, 255, 0), -1);
+
 }
 
 bool is_file(const char* path) {
