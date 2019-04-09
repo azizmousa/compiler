@@ -40,6 +40,8 @@ static vector<Net> loadedNets;
 
 static std::vector<std::vector<std::string>> classes;
 
+static long objectsCounter = 0;
+
 struct DirectoryNotFoundException : public exception
 {
     DirectoryNotFoundException(std::string &file){
@@ -63,7 +65,7 @@ Blob objectBox);
 
 // Draw the predicted bounding box
 void drawPred(int classId, float conf, int left, int top, 
-    int right, int bottom, Mat& frame, int classesIndex, int counter);
+    int right, int bottom, Mat& frame, int classesIndex);
 
 // Get the names of the output layers
 vector<String> getOutputsNames(const Net& net);
@@ -333,31 +335,31 @@ void detectObjects(int netIndex, string imagePath, int classesIndex, bool &found
     }
     
 
-        cap >> frame;
+    cap >> frame;
 
-        // Create a 4D blob from a frame.
-        
-        blobFromImage(frame, blob, 1/255.0, cvSize(inpWidth, inpHeight), Scalar(0,0,0), true, false);
-        
-        //Sets the input to the network
-        loadedNets[netIndex].setInput(blob);
-        
-        
-        // Runs the forward pass to get output of the output layers
-        vector<Mat> outs;
-        loadedNets[netIndex].forward(outs, getOutputsNames(loadedNets[netIndex]));
-        
-       
-        // Remove the bounding boxes with low confidence
-        postprocess(frame, outs, classesIndex, found, objectBox);
-        
-        // Put efficiency information. The function getPerfProfile returns the overall time for inference(t) and the timings for each of the layers(in layersTimes)
-        vector<double> layersTimes;
-        double freq = getTickFrequency() / 1000;
-        double t = loadedNets[netIndex].getPerfProfile(layersTimes) / freq;
-        string label = format("Inference time for a frame : %.2f ms", t);
-        putText(frame, label, Point(0, 15), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 0, 255));
-        
+    // Create a 4D blob from a frame.
+    
+    blobFromImage(frame, blob, 1/255.0, cvSize(inpWidth, inpHeight), Scalar(0,0,0), true, false);
+    
+    //Sets the input to the network
+    loadedNets[netIndex].setInput(blob);
+    
+    
+    // Runs the forward pass to get output of the output layers
+    vector<Mat> outs;
+    loadedNets[netIndex].forward(outs, getOutputsNames(loadedNets[netIndex]));
+    
+    
+    // Remove the bounding boxes with low confidence
+    postprocess(frame, outs, classesIndex, found, objectBox);
+    
+    // Put efficiency information. The function getPerfProfile returns the overall time for inference(t) and the timings for each of the layers(in layersTimes)
+    vector<double> layersTimes;
+    double freq = getTickFrequency() / 1000;
+    double t = loadedNets[netIndex].getPerfProfile(layersTimes) / freq;
+    string label = format("Inference time for a frame : %.2f ms", t);
+    putText(frame, label, Point(0, 15), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 0, 255));
+    
     cap.release();
 }
 
@@ -410,10 +412,10 @@ Blob objectBox){
         if(objectBox.boundingRect.area() > 0){
             drawPred(classIds[idx], confidences[idx], objectBox.boundingRect.x, objectBox.boundingRect.y,
                  objectBox.boundingRect.x + objectBox.boundingRect.width, objectBox.boundingRect.y + objectBox.boundingRect.height,
-                  frame, classesIndex, i+1);
+                  frame, classesIndex);
         }else{
              drawPred(classIds[idx], confidences[idx], box.x, box.y,
-                 box.x + box.width, box.y + box.height, frame, classesIndex, i+1);
+                 box.x + box.width, box.y + box.height, frame, classesIndex);
         }
        
     }
@@ -421,14 +423,14 @@ Blob objectBox){
 
 // Draw the predicted bounding box
 void drawPred(int classId, float conf, int left, int top, 
-    int right, int bottom, Mat& frame, int classesIndex, int counter){
+    int right, int bottom, Mat& frame, int classesIndex){
     //Draw a rectangle displaying the bounding box
     rectangle(frame, Point(left, top), Point(right, bottom), Scalar(255, 178, 50), 3);
 
     std::ofstream file;
     file.open(OBJECTS_OUTPUT_FILE, ios::app);
     file << classes[classesIndex][classId] <<std::endl;
-    file << classes[classesIndex][classId]<<"_"<<counter<<std::endl;
+    file << classes[classesIndex][classId]<<"_"<<objectsCounter++<<std::endl;
     file << left << std::endl;
     file << top << std::endl;
     file << right << std::endl;
