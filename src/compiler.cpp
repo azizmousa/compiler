@@ -72,9 +72,7 @@ vector<String> getOutputsNames(const Net& net);
 int getDirFiles (string dir, string filesExtention, vector<string> &files);
 
 //detect object in the image using specific weight 
-void detectObjects(string namesFile, string cfgFile, string weightsFile, 
-    string imagePath, int classesIndex, bool &found, 
-    Blob objectBoxs);
+void detectObjects(int netIndex, string imagePath, int classesIndex, bool &found, Blob objectBoxs);
 
 //check string if end with specific string
 bool endsWith(const std::string &mainStr, const std::string &toMatch);
@@ -117,6 +115,7 @@ int main(int argc, char* argv[]){
     }
 
     loadClasses();
+    loadNets();
 
     std::cout << argv[1] << std::endl;
     
@@ -191,7 +190,7 @@ void imageFileProcess(std::string imagePath, Flages imageFlage){
         if(imageFlage == Flages::paperFlage){
             for(size_t i =0; i<weightsVector.size();++i){
                 // vector<string> classes;
-                detectObjects(namesVector[i],cfgVector[i],weightsVector[i], cropedPath, i, foundFlage, nullBlob);
+                detectObjects(i, cropedPath, i, foundFlage, nullBlob);
                 //std::cerr << namesVector[i] << "\t" << cfgVector[i] << "\t" <<weightsVector[i]<<endl;
             }
         }else if(imageFlage == Flages::drawnFlage){
@@ -201,17 +200,18 @@ void imageFileProcess(std::string imagePath, Flages imageFlage){
             vector<Blob> objectsBoxs;
             cObjects.getOjectsCoordinates(objectsBoxs);
             
-            std::thread *imgThreads = new std::thread[objectsBoxs.size()];
+            // std::thread *imgThreads = new std::thread[objectsBoxs.size()];
 
             for(size_t i =0; i<objectsBoxs.size();++i){
                 // bool *pff = false;
                 std::cerr << "starting thread number: " << i << std::endl;
-                *(imgThreads+i) = std::thread(executeThread, objectsImage, width, height, objectsBoxs[i]);
+                executeThread(objectsImage, width, height, objectsBoxs[i]);
+                // *(imgThreads+i) = std::thread(executeThread, objectsImage, width, height, objectsBoxs[i]);
             }
-            for(size_t i =0; i<objectsBoxs.size();++i){
-                (imgThreads+i)->join();
-            }
-            delete [] imgThreads;
+            // for(size_t i =0; i<objectsBoxs.size();++i){
+            //     (imgThreads+i)->join();
+            // }
+            // delete [] imgThreads;
             cv::imwrite(cropedPath, objectsImage);   
         }
     }else{
@@ -223,7 +223,6 @@ void imageFileProcess(std::string imagePath, Flages imageFlage){
 
 void executeThread(cv::Mat objectsImage, int width, int height, Blob box){
     // std::lock_guard<std::mutex> lock(mut);
-    std::cerr << "debugging thread" << std::endl;
     cv::Mat emptyImage(height, width, CV_8UC1, Scalar(255, 255, 255));
     std::cerr << box.boundingRect << std::endl;
     cv::Mat obj = objectsImage(box.boundingRect);
@@ -237,10 +236,10 @@ void executeThread(cv::Mat objectsImage, int width, int height, Blob box){
     bool ff = false;
     for(size_t j =0; j<weightsVector.size();++j){
         // vector<string> classes;
-        std::cerr << "current thread id = " << std::this_thread::get_id() << std::endl;
-        detectObjects(namesVector[j],cfgVector[j],weightsVector[j], threadEmptyPath, j, ff, box);
-        if(ff)
-            break;
+        // std::cerr << "current thread id = " << std::this_thread::get_id() << std::endl;
+        detectObjects(j, threadEmptyPath, j, ff, box);
+        // if(ff)
+        //     break;
         //std::cerr << namesVector[i] << "\t" << cfgVector[i] << "\t" <<weightsVector[i]<<endl;
     }
     cv::rectangle(objectsImage, box.boundingRect, Scalar(255, 0, 0), 2);
@@ -292,29 +291,32 @@ void loadClasses(){
 }
 
  void loadNets(){
+     for(size_t i =0; i<weightsVector.size();++i){
+        // Give the configuration and weight files for the model
+        String modelConfiguration = "configurations/"+cfgVector[i];
+        String modelWeights = "weights/"+weightsVector[i];
+
+        std::cerr << modelConfiguration << "\t" << modelWeights << std::endl;
+
+        // Load the network
+        Net net = readNetFromDarknet(modelConfiguration, modelWeights);
+        net.setPreferableBackend(DNN_BACKEND_OPENCV);
+        net.setPreferableTarget(DNN_TARGET_CPU);
+
+        loadedNets.push_back(net);
+     }
      
  }
 
-void detectObjects(string namesFile, string cfgFile, string weightsFile, string imagePath, 
-    int classesIndex, bool &found, Blob objectBox){
-        std::cerr << "current thread id = " << std::this_thread::get_id() << std::endl;
-    
-    // Give the configuration and weight files for the model
-    String modelConfiguration = "configurations/"+cfgFile;
-    String modelWeights = "weights/"+weightsFile;
-
-    std::cerr << modelConfiguration << "\t" << modelWeights << std::endl;
-
-    // Load the network
-    Net net = readNetFromDarknet(modelConfiguration, modelWeights);
-    net.setPreferableBackend(DNN_BACKEND_OPENCV);
-    net.setPreferableTarget(DNN_TARGET_CPU);
+void detectObjects(int netIndex, string imagePath, int classesIndex, bool &found, Blob objectBox){
+        // std::cerr << "current thread id = " << std::this_thread::get_id() << std::endl;
     
     // Open a video file or an image file or a camera stream.
     string str, outputFile;
      VideoCapture cap;
     // VideoWriter video;
     Mat frame, blob;
+    // Net net = loadedNets[netIndex];
     
     try {
         // Open the image file
@@ -330,48 +332,32 @@ void detectObjects(string namesFile, string cfgFile, string weightsFile, string 
         return;
     }
     
-    // Create a window
-    // static const string kWinName = "Image Processing ...";
-    // namedWindow(kWinName, WINDOW_NORMAL);
 
-    // Process frames.
-    while (waitKey(1) < 0)
-    {
-        // get frame from the video
         cap >> frame;
 
-        // Stop the program if reached end of video
-        if (frame.empty()) {
-            cout << "Done processing !!!" << endl;
-            cout << "Output file is stored as " << outputFile << endl;
-            //waitKey(3000);
-            break;
-        }
         // Create a 4D blob from a frame.
+        
         blobFromImage(frame, blob, 1/255.0, cvSize(inpWidth, inpHeight), Scalar(0,0,0), true, false);
         
         //Sets the input to the network
-        net.setInput(blob);
+        loadedNets[netIndex].setInput(blob);
+        
         
         // Runs the forward pass to get output of the output layers
         vector<Mat> outs;
-        net.forward(outs, getOutputsNames(net));
+        loadedNets[netIndex].forward(outs, getOutputsNames(loadedNets[netIndex]));
         
+       
         // Remove the bounding boxes with low confidence
         postprocess(frame, outs, classesIndex, found, objectBox);
         
         // Put efficiency information. The function getPerfProfile returns the overall time for inference(t) and the timings for each of the layers(in layersTimes)
         vector<double> layersTimes;
         double freq = getTickFrequency() / 1000;
-        double t = net.getPerfProfile(layersTimes) / freq;
+        double t = loadedNets[netIndex].getPerfProfile(layersTimes) / freq;
         string label = format("Inference time for a frame : %.2f ms", t);
         putText(frame, label, Point(0, 15), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 0, 255));
         
-       
-        
-        //imshow(kWinName, frame);
-        
-    }
     cap.release();
 }
 
