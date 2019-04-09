@@ -34,6 +34,12 @@ std::string const EMPTY_IMAGE_PATH = "crop/";
 
 int cn = 0;
 
+static vector<string> weightsVector, namesVector, cfgVector;
+
+static vector<Net> loadedNets;
+
+static std::vector<std::vector<std::string>> classes;
+
 struct DirectoryNotFoundException : public exception
 {
     DirectoryNotFoundException(std::string &file){
@@ -52,12 +58,12 @@ enum struct Flages{
 };
 
 // Remove the bounding boxes with low confidence using non-maxima suppression
-void postprocess(Mat& frame, const vector<Mat>& out, std::vector<std::string> &classes, bool &foundFlage, 
+void postprocess(Mat& frame, const vector<Mat>& out, int classesIndex, bool &foundFlage, 
 Blob objectBox);
 
 // Draw the predicted bounding box
 void drawPred(int classId, float conf, int left, int top, 
-    int right, int bottom, Mat& frame, std::vector<std::string> &classes, int counter);
+    int right, int bottom, Mat& frame, int classesIndex, int counter);
 
 // Get the names of the output layers
 vector<String> getOutputsNames(const Net& net);
@@ -67,7 +73,7 @@ int getDirFiles (string dir, string filesExtention, vector<string> &files);
 
 //detect object in the image using specific weight 
 void detectObjects(string namesFile, string cfgFile, string weightsFile, 
-    string imagePath, std::vector<std::string> &classes, bool &found, 
+    string imagePath, int classesIndex, bool &found, 
     Blob objectBoxs);
 
 //check string if end with specific string
@@ -87,8 +93,9 @@ void runOperation(int end, Flages imageFlage, char *argv[]);
 
 void executeThread(cv::Mat objectsImage, int width, int height, Blob box);
 
-static vector<string> weightsVector, namesVector, cfgVector;
+void loadNets();
 
+void loadClasses();
 
 
 
@@ -108,6 +115,8 @@ int main(int argc, char* argv[]){
         std::cout << e.what() << std::endl;
         return 0;
     }
+
+    loadClasses();
 
     std::cout << argv[1] << std::endl;
     
@@ -181,8 +190,8 @@ void imageFileProcess(std::string imagePath, Flages imageFlage){
         Blob nullBlob;
         if(imageFlage == Flages::paperFlage){
             for(size_t i =0; i<weightsVector.size();++i){
-                vector<string> classes;
-                detectObjects(namesVector[i],cfgVector[i],weightsVector[i], cropedPath, classes, foundFlage, nullBlob);
+                // vector<string> classes;
+                detectObjects(namesVector[i],cfgVector[i],weightsVector[i], cropedPath, i, foundFlage, nullBlob);
                 //std::cerr << namesVector[i] << "\t" << cfgVector[i] << "\t" <<weightsVector[i]<<endl;
             }
         }else if(imageFlage == Flages::drawnFlage){
@@ -227,10 +236,11 @@ void executeThread(cv::Mat objectsImage, int width, int height, Blob box){
     cv::imwrite(threadEmptyPath, emptyImage);
     bool ff = false;
     for(size_t j =0; j<weightsVector.size();++j){
-        vector<string> classes;
-        detectObjects(namesVector[j],cfgVector[j],weightsVector[j], threadEmptyPath, classes, ff, box);
-        // if(foundFlage)
-        //     break;
+        // vector<string> classes;
+        std::cerr << "current thread id = " << std::this_thread::get_id() << std::endl;
+        detectObjects(namesVector[j],cfgVector[j],weightsVector[j], threadEmptyPath, j, ff, box);
+        if(ff)
+            break;
         //std::cerr << namesVector[i] << "\t" << cfgVector[i] << "\t" <<weightsVector[i]<<endl;
     }
     cv::rectangle(objectsImage, box.boundingRect, Scalar(255, 0, 0), 2);
@@ -269,13 +279,25 @@ int getDirFiles (string dir, string filesExtention, vector<string> &files){
     return 0;
 }
 
+void loadClasses(){
+    for(size_t i = 0; i<weightsVector.size();++i){
+        // Load names of classes
+        string classesFile = "names/"+namesVector[i];
+        ifstream ifs(classesFile.c_str());
+        string line;
+        std::vector<std::string> temp;
+        while (getline(ifs, line)) temp.push_back(line);
+        classes.push_back(temp);
+    }
+}
+
+ void loadNets(){
+     
+ }
+
 void detectObjects(string namesFile, string cfgFile, string weightsFile, string imagePath, 
-    std::vector<std::string> &classes, bool &found, Blob objectBox){
-    // Load names of classes
-    string classesFile = "names/"+namesFile;
-    ifstream ifs(classesFile.c_str());
-    string line;
-    while (getline(ifs, line)) classes.push_back(line);
+    int classesIndex, bool &found, Blob objectBox){
+        std::cerr << "current thread id = " << std::this_thread::get_id() << std::endl;
     
     // Give the configuration and weight files for the model
     String modelConfiguration = "configurations/"+cfgFile;
@@ -336,7 +358,7 @@ void detectObjects(string namesFile, string cfgFile, string weightsFile, string 
         net.forward(outs, getOutputsNames(net));
         
         // Remove the bounding boxes with low confidence
-        postprocess(frame, outs, classes, found, objectBox);
+        postprocess(frame, outs, classesIndex, found, objectBox);
         
         // Put efficiency information. The function getPerfProfile returns the overall time for inference(t) and the timings for each of the layers(in layersTimes)
         vector<double> layersTimes;
@@ -354,7 +376,7 @@ void detectObjects(string namesFile, string cfgFile, string weightsFile, string 
 }
 
 // Remove the bounding boxes with low confidence using non-maxima suppression
-void postprocess(Mat& frame, const vector<Mat>& outs, std::vector<std::string> &classes, bool &foundFlage, 
+void postprocess(Mat& frame, const vector<Mat>& outs, int classesIndex, bool &foundFlage, 
 Blob objectBox){
 
     vector<int> classIds;
@@ -402,10 +424,10 @@ Blob objectBox){
         if(objectBox.boundingRect.area() > 0){
             drawPred(classIds[idx], confidences[idx], objectBox.boundingRect.x, objectBox.boundingRect.y,
                  objectBox.boundingRect.x + objectBox.boundingRect.width, objectBox.boundingRect.y + objectBox.boundingRect.height,
-                  frame, classes, i+1);
+                  frame, classesIndex, i+1);
         }else{
              drawPred(classIds[idx], confidences[idx], box.x, box.y,
-                 box.x + box.width, box.y + box.height, frame, classes, i+1);
+                 box.x + box.width, box.y + box.height, frame, classesIndex, i+1);
         }
        
     }
@@ -413,14 +435,14 @@ Blob objectBox){
 
 // Draw the predicted bounding box
 void drawPred(int classId, float conf, int left, int top, 
-    int right, int bottom, Mat& frame, std::vector<std::string> &classes, int counter){
+    int right, int bottom, Mat& frame, int classesIndex, int counter){
     //Draw a rectangle displaying the bounding box
     rectangle(frame, Point(left, top), Point(right, bottom), Scalar(255, 178, 50), 3);
 
     std::ofstream file;
     file.open(OBJECTS_OUTPUT_FILE, ios::app);
-    file << classes[classId] <<std::endl;
-    file << classes[classId]<<"_"<<counter<<std::endl;
+    file << classes[classesIndex][classId] <<std::endl;
+    file << classes[classesIndex][classId]<<"_"<<counter<<std::endl;
     file << left << std::endl;
     file << top << std::endl;
     file << right << std::endl;
@@ -431,10 +453,10 @@ void drawPred(int classId, float conf, int left, int top,
     
     //Get the label for the class name and its confidence
     string label = format("%.2f", conf);
-    if (!classes.empty())
+    if (!classes[classesIndex].empty())
     {
-        CV_Assert(classId < (int)classes.size());
-        label = classes[classId] + ":" + label;
+        CV_Assert(classId < (int)classes[classesIndex].size());
+        label = classes[classesIndex][classId] + ":" + label;
     }
     
     //Display the label at the top of the bounding box
