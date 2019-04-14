@@ -1,4 +1,6 @@
-#pragma once
+#ifndef BLOB_
+#define BLOB_
+
 #include<opencv2/core/core.hpp>
 #include<opencv2/highgui/highgui.hpp>
 #include<opencv2/imgproc/imgproc.hpp>
@@ -17,3 +19,4 @@ public:
     Blob(std::vector<cv::Point> _contour);
     Blob();
 };
+#endif
