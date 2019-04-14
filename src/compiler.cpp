@@ -11,6 +11,8 @@
 #include <thread>
 #include <sstream>
 
+#include <stdio.h>
+
 #include <opencv2/dnn.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
@@ -19,6 +21,7 @@
 #include <sys/stat.h>
 #include<thread>
 #include<ctime>
+
 using namespace cv;
 using namespace dnn;
 using namespace std;
@@ -56,7 +59,8 @@ private:
 
 enum struct Flages{
     drawnFlage,
-    paperFlage
+    paperFlage,
+    clearTemp
 };
 
 // Remove the bounding boxes with low confidence using non-maxima suppression
@@ -96,7 +100,7 @@ void executeThread(cv::Mat objectsImage, int width, int height, Blob box);
 void loadNets();
 
 void loadClasses();
-
+void clearTemp();
 
 
 int main(int argc, char* argv[]){
@@ -148,7 +152,7 @@ void runOperation(int end, Flages imageFlage, char *argv[]){
         }else{
             std::cerr << "folder !!!!!!" << std::endl;
             std::vector<string> images;
-            getDirFiles(argv[i], "jpg",images);
+            getDirFiles(argv[i], "",images);
             std::cerr << "imageSize = " <<images.size() << std::endl;
             for(size_t j = 0; j<images.size();++j){
                 imageFileProcess(string(argv[i])+"/"+images[j], imageFlage);
@@ -191,7 +195,6 @@ void imageFileProcess(std::string imagePath, Flages imageFlage){
         Blob nullBlob;
         if(imageFlage == Flages::paperFlage){
             for(size_t i =0; i<weightsVector.size();++i){
-                // vector<string> classes;
                 detectObjects(i, cropedPath, i, foundFlage, nullBlob);
                 //std::cerr << namesVector[i] << "\t" << cfgVector[i] << "\t" <<weightsVector[i]<<endl;
             }
@@ -237,11 +240,9 @@ void executeThread(cv::Mat objectsImage, int width, int height, Blob box){
     cv::imwrite(threadEmptyPath, emptyImage);
     bool ff = false;
     for(size_t j =0; j<weightsVector.size();++j){
-        // vector<string> classes;
-        // std::cerr << "current thread id = " << std::this_thread::get_id() << std::endl;
         detectObjects(j, threadEmptyPath, j, ff, box);
-        // if(ff)
-        //     break;
+        if(ff)
+            break;
         //std::cerr << namesVector[i] << "\t" << cfgVector[i] << "\t" <<weightsVector[i]<<endl;
     }
     cv::rectangle(objectsImage, box.boundingRect, Scalar(255, 0, 0), 2);
@@ -272,9 +273,15 @@ int getDirFiles (string dir, string filesExtention, vector<string> &files){
     }
 
     while ((dirp = readdir(dp)) != NULL) {
-    	// if(endsWith(dirp->d_name, filesExtention))
-        if(!(dirp->d_name == std::string(".") || dirp->d_name == string("..")))
-            files.push_back(string(dirp->d_name));
+    	if(filesExtention != ""){
+            if(endsWith(dirp->d_name, filesExtention))
+                if(!(dirp->d_name == std::string(".") || dirp->d_name == string("..")))
+                    files.push_back(string(dirp->d_name));
+        }else{
+             if(!(dirp->d_name == std::string(".") || dirp->d_name == string("..")))
+                    files.push_back(string(dirp->d_name));
+        }
+            
     }
     closedir(dp);
     return 0;
@@ -501,4 +508,13 @@ std::string getFileName(std::string path){
     }
     return name;
     
+}
+
+
+void clearTemp(){
+    std::vector<std::string> files;
+    getDirFiles("temp", "", files);
+    for(size_t i =0; i<files.size(); ++i){
+        remove(files[i].c_str());
+    }
 }
