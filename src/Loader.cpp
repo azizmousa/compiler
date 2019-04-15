@@ -19,6 +19,7 @@ void Loader::loadVectors(){
     Files::getDirFiles(this->namesPath, ".names", this->namesVector);
     Files::getDirFiles(this->configurationsPath, ".cfg", this->cfgVector);
 }
+
 void Loader::loadNets(){
     for(size_t i =0; i < this->weightsVector.size(); ++i){
         // Give the configuration and weight files for the model
@@ -61,4 +62,9 @@ void Loader::getClassesVector(const size_t index, std::vector<std::string> &clas
 }
 std::string Loader::getClass(const size_t vIndex, const size_t cIndex)const{
     return this->classes[vIndex][cIndex];
+}
+
+std::vector<cv::dnn::Net> Loader::getAllNets()const{
+    static std::vector<cv::dnn::Net> myNets = this->networks;
+    return myNets;
 }
