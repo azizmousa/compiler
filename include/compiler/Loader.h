@@ -27,6 +27,7 @@ public:
     
     cv::dnn::Net getNet(const size_t index)const;
     std::vector<cv::dnn::Net> getAllNets()const;
+    std::vector<std::vector<std::string>> getAllClasses()const;
     void getClassesVector(const size_t index, std::vector<std::string> &classes)const;
     std::string getClass(const size_t vIndex, const size_t cIndex)const;
 

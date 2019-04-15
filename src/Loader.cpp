@@ -68,3 +68,8 @@ std::vector<cv::dnn::Net> Loader::getAllNets()const{
     static std::vector<cv::dnn::Net> myNets = this->networks;
     return myNets;
 }
+
+std::vector<std::vector<std::string>> Loader::getAllClasses()const{
+    static std::vector<std::vector<std::string>> myClasses = this->classes;
+    return myClasses;
+}
