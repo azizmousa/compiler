@@ -19,6 +19,8 @@ public:
     //check if path is file or not 
     static bool is_file(const char* path);
 
+    static char slash();
+
 };
 
 #endif

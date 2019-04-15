@@ -65,3 +65,11 @@ bool Files::is_file(const char* path) {
     stat(path, &buf);
     return S_ISREG(buf.st_mode);
 }
+
+char Files::slash(){
+    char s = '/';
+#ifdef _WIN32
+    s = '\\';
+#endif
+    return s;
+}
