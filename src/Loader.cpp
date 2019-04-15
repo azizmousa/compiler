@@ -13,6 +13,7 @@ Loader::Loader(const std::string weightsPath, const std::string namesPath, const
     this->loadClasses();
     this->loadNets();    
 }
+Loader::~Loader(){}
 
 void Loader::loadVectors(){
     Files::getDirFiles(this->weightsPath, ".weights", this->weightsVector);
