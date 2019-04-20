@@ -18,7 +18,7 @@ public:
     static std::string getFileName(std::string path);
     //check if path is file or not 
     static bool is_file(const char* path);
-
+    static void initializeOutputDirectory(std::string dir);
     static char slash();
 
 };

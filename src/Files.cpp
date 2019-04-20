@@ -1,8 +1,11 @@
+
+#include <iostream>
+#include <dirent.h>
+#include <sys/stat.h>
+
 #include "compiler/Files.h"
 #include "compiler/DetectorExceptions.h"
 
-#include <dirent.h>
-#include <sys/stat.h>
 
 bool Files::endsWith(const std::string &mainStr, const std::string &toMatch)
 {
@@ -72,4 +75,15 @@ char Files::slash(){
     s = '\\';
 #endif
     return s;
+}
+
+void Files::initializeOutputDirectory(std::string dir){
+	struct stat info;
+	if(stat(dir.c_str(), &info) != 0){
+		int check = mkdir(dir.c_str(), 0777);
+		if(check == -1)
+			std::cerr << "cannot create Direcory" << std::endl;
+		else
+			std::cout << "Directory " << dir << "created successfully" << std::endl;	
+	}
 }
