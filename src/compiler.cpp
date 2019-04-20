@@ -15,6 +15,7 @@
 std::string const EMPTY_IMAGE_PATH = "crop";
 std::string const OUTPUP_VIW_FILES_DIR = "views";
 std::string const TEMP_PATH = "temp";
+std::string const IMAGE_EXTENTION = ".JPEG";
 
 enum struct Flages{
     drawnFlage,
@@ -37,8 +38,8 @@ Detector *detector;
 int main(int argc, char* argv[]){
 
     auto t1 = std::chrono::system_clock::now();
-    if(argc < 2){
-        std::cout << "you should pass the image path" << std::endl;
+    if(argc < 3){
+        std::cout << "you should pass the input path" << std::endl;
         return 1;
     }
     
@@ -50,7 +51,7 @@ int main(int argc, char* argv[]){
         Files::initializeOutputDirectory(TEMP_PATH);
     }catch(std::exception &e){
         std::cout << e.what() << std::endl;
-        return 0;
+        return 1;
     }
     
     std::cout << argv[1] << std::endl;
@@ -59,8 +60,13 @@ int main(int argc, char* argv[]){
         runOperation(argc, Flages::drawnFlage, argv);
     else if(std::string(argv[1]) == "-p" || std::string(argv[1]) == "--paper")
         runOperation(argc, Flages::paperFlage, argv);
-    else
+    else{
         std::cout << "invalid image type flage" << std::endl;
+        delete loader;
+        delete detector;
+        return 1;
+    }
+        
 
     delete loader;
     delete detector;
@@ -115,14 +121,14 @@ void imageFileProcess(std::string imagePath, Flages imageFlage){
         int width = img.cols;
         int height = img.rows;
         std::cerr << width << " " << height << std::endl;
-        std::string cropedPath = "crop" + Files::slash() + Files::getFileName(image) + ".jpg";
+        std::string cropedPath = EMPTY_IMAGE_PATH + Files::slash() + Files::getFileName(image) + IMAGE_EXTENTION;
         cv::imwrite(cropedPath, img);
         img.release();
 
         detector->setObjcetsOutputFile(image);
         detector->setObjcetsOutputDir(OUTPUP_VIW_FILES_DIR);
         std::ofstream sFile;
-        sFile.open(OUTPUP_VIW_FILES_DIR + detector->getObjectsOutputFile() + ".viw");
+        sFile.open(OUTPUP_VIW_FILES_DIR +Files::slash()+ detector->getObjectsOutputFile() + ".viw");
         sFile << width << std::endl;
         sFile << height << std::endl;
         sFile.close();
@@ -165,7 +171,7 @@ void executeThread(cv::Mat objectsImage, int width, int height, Blob box){
     auto id = std::this_thread::get_id();
     std::stringstream ss;
     ss << id;
-    std::string threadEmptyPath = EMPTY_IMAGE_PATH + Files::slash() + ss.str() + ".jpg";
+    std::string threadEmptyPath = EMPTY_IMAGE_PATH + Files::slash() + ss.str() + IMAGE_EXTENTION;
     std::cerr << "empty image path = " << threadEmptyPath << std::endl;
     cv::imwrite(threadEmptyPath, emptyImage);
     bool ff = false;
