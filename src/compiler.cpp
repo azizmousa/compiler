@@ -12,7 +12,9 @@
 #include "compiler/crop.h"
 #include "compiler/Files.h"
 
-std::string const EMPTY_IMAGE_PATH = "crop/";
+std::string const EMPTY_IMAGE_PATH = "crop";
+std::string const OUTPUP_VIW_FILES_DIR = "views";
+std::string const TEMP_PATH = "temp";
 
 enum struct Flages{
     drawnFlage,
@@ -42,15 +44,15 @@ int main(int argc, char* argv[]){
     
     try{
         loader = new Loader("weights", "names", "configurations");
-        detector = new Detector(loader->getAllNets(), loader->getAllClasses(), "temp");
+        detector = new Detector(loader->getAllNets(), loader->getAllClasses(), TEMP_PATH);
+        Files::initializeOutputDirectory(EMPTY_IMAGE_PATH);
+        Files::initializeOutputDirectory(OUTPUP_VIW_FILES_DIR);
+        Files::initializeOutputDirectory(TEMP_PATH);
     }catch(std::exception &e){
         std::cout << e.what() << std::endl;
         return 0;
     }
-
-    // loadClasses();
-    // loadNets();
-
+    
     std::cout << argv[1] << std::endl;
     
     if(std::string(argv[1]) == "-d" || std::string(argv[1]) == "--drawn")
@@ -86,7 +88,7 @@ void runOperation(int end, Flages imageFlage, char *argv[]){
             Files::getDirFiles(argv[i], "", images);
             std::cerr << "imageSize = " << images.size() << std::endl;
             for(size_t j = 0; j< images.size() ;++j){
-                imageFileProcess(std::string(argv[i])+"/"+images[j], imageFlage);
+                imageFileProcess(std::string(argv[i])+Files::slash()+images[j], imageFlage);
             }
         }
        
@@ -113,13 +115,14 @@ void imageFileProcess(std::string imagePath, Flages imageFlage){
         int width = img.cols;
         int height = img.rows;
         std::cerr << width << " " << height << std::endl;
-        std::string cropedPath = "crop/"+ Files::getFileName(image) + ".jpg";
+        std::string cropedPath = "crop" + Files::slash() + Files::getFileName(image) + ".jpg";
         cv::imwrite(cropedPath, img);
         img.release();
 
         detector->setObjcetsOutputFile(image);
+        detector->setObjcetsOutputDir(OUTPUP_VIW_FILES_DIR);
         std::ofstream sFile;
-        sFile.open(detector->getObjectsOutputFile() + ".viw");
+        sFile.open(OUTPUP_VIW_FILES_DIR + detector->getObjectsOutputFile() + ".viw");
         sFile << width << std::endl;
         sFile << height << std::endl;
         sFile.close();
@@ -162,7 +165,7 @@ void executeThread(cv::Mat objectsImage, int width, int height, Blob box){
     auto id = std::this_thread::get_id();
     std::stringstream ss;
     ss << id;
-    std::string threadEmptyPath = EMPTY_IMAGE_PATH + ss.str() + ".jpg";
+    std::string threadEmptyPath = EMPTY_IMAGE_PATH + Files::slash() + ss.str() + ".jpg";
     std::cerr << "empty image path = " << threadEmptyPath << std::endl;
     cv::imwrite(threadEmptyPath, emptyImage);
     bool ff = false;
@@ -174,7 +177,7 @@ void executeThread(cv::Mat objectsImage, int width, int height, Blob box){
 
 void clearTemp(){
     std::vector<std::string> files;
-    Files::getDirFiles("temp", "", files);
+    Files::getDirFiles(TEMP_PATH, "", files);
     for(size_t i =0; i<files.size(); ++i){
         remove(files[i].c_str());
     }

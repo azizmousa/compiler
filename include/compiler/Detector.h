@@ -22,7 +22,7 @@ private:
     int inpWidth;  // Width of network's input image
     int inpHeight; // Height of network's input image
     
-    std::string tempPath, objectOutputFile;
+    std::string tempPath, objectOutputFile, objectsOutputDir;
 
     std::vector<cv::dnn::Net> loadedNets;
     std::vector<std::vector<std::string>> classes;
@@ -51,6 +51,8 @@ public:
 
     std::string getObjectsOutputFile()const;
     void setObjcetsOutputFile(std::string file);
+    std::string getObjectsOutputDir()const;
+    void setObjcetsOutputDir(std::string file);
 
 
 };

@@ -24,8 +24,8 @@ void Loader::loadVectors(){
 void Loader::loadNets(){
     for(size_t i =0; i < this->weightsVector.size(); ++i){
         // Give the configuration and weight files for the model
-        std::string modelConfiguration = this->configurationsPath + "/" + cfgVector[i];
-        std::string modelWeights = this->weightsPath + "/" +weightsVector[i];
+        std::string modelConfiguration = this->configurationsPath + Files::slash() + cfgVector[i];
+        std::string modelWeights = this->weightsPath + Files::slash() +weightsVector[i];
         // std::cerr << modelConfiguration << "\t" << modelWeights << std::endl;
         // Load the network
         cv::dnn::Net net = cv::dnn::readNetFromDarknet(modelConfiguration, modelWeights);
@@ -38,7 +38,7 @@ void Loader::loadNets(){
 void Loader::loadClasses(){
     for(size_t i = 0; i < this->weightsVector.size();++i){
         // Load names of classes
-        std::string classesFile = this->namesPath + "/" +namesVector[i];
+        std::string classesFile = this->namesPath + Files::slash() +namesVector[i];
         std::ifstream ifs(classesFile.c_str());
         std::string line;
         std::vector<std::string> temp;

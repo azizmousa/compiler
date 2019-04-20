@@ -51,7 +51,6 @@ void Detector::detectObjects(int netIndex, const std::string imagePath, int clas
     //Sets the input to the network
     this->loadedNets[netIndex].setInput(blob);
     
-    
     // Runs the forward pass to get output of the output layers
     std::vector<cv::Mat> outs;
     this->loadedNets[netIndex].forward(outs, this->getOutputsNames(this->loadedNets[netIndex]));
@@ -132,7 +131,7 @@ int bottom, cv::Mat& frame, const int classesIndex){
     cv::rectangle(frame, cv::Point(left, top), cv::Point(right, bottom), cv::Scalar(255, 178, 50), 3);
 
     std::ofstream file;
-    file.open(Detector::objectOutputFile + ".viw", std::ios::app);
+    file.open(this->objectsOutputDir+Files::slash()+this->objectOutputFile + ".viw", std::ios::app);
     file << this->classes[classesIndex][classId] << std::endl;
     file << this->classes[classesIndex][classId] << "_" << Detector::objectsCounter++<<std::endl;
     file << left << std::endl;
@@ -158,7 +157,7 @@ int bottom, cv::Mat& frame, const int classesIndex){
     cv::rectangle(frame, cv::Point(left, top - std::round(1.5*labelSize.height)), cv::Point(left + round(1.5*labelSize.width), 
     top + baseLine), cv::Scalar(255, 255, 255), cv::FILLED);
     cv::putText(frame, label, cv::Point(left, top), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(0,0,0),1);
-    std::string outputFile =  this->tempPath + "/" + this->objectOutputFile + std::to_string(Detector::filesCounter++) + ".jpg";
+    std::string outputFile =  this->tempPath + Files::slash() + this->objectOutputFile + std::to_string(Detector::filesCounter++) + ".jpg";
     // Write the frame with the detection boxes
     cv::Mat detectedFrame;
     frame.convertTo(detectedFrame, CV_8U);
@@ -194,4 +193,10 @@ std::string Detector::getObjectsOutputFile()const{
 }
 void Detector::setObjcetsOutputFile(std::string file){
     this->objectOutputFile = Files::getFileName(file);
+}
+std::string Detector::getObjectsOutputDir()const{
+    return this->objectsOutputDir;
+}
+void Detector::setObjcetsOutputDir(std::string file){
+    this->objectsOutputDir = file;
 }
