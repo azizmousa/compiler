@@ -105,8 +105,8 @@ void imageFileProcess(std::string imagePath, Flages imageFlage){
     std::cerr << std::endl << "imagePath: " << imagePath << std::endl;
     std::ifstream file(imagePath);
     if(file.good()){
-        std::string image = imagePath;
-        cv::Mat img = imread(image, cv::IMREAD_GRAYSCALE);
+        // std::string image = imagePath;
+        cv::Mat img = cv::imread(imagePath);
         // int fw, fh;
         // fw = img.cols;
         // fh = img.rows;
@@ -121,11 +121,11 @@ void imageFileProcess(std::string imagePath, Flages imageFlage){
         int width = img.cols;
         int height = img.rows;
         std::cerr << width << " " << height << std::endl;
-        std::string cropedPath = EMPTY_IMAGE_PATH + Files::slash() + Files::getFileName(image) + IMAGE_EXTENTION;
+        std::string cropedPath = EMPTY_IMAGE_PATH + Files::slash() + Files::getFileName(imagePath) + IMAGE_EXTENTION;
         cv::imwrite(cropedPath, img);
         img.release();
 
-        detector->setObjcetsOutputFile(image);
+        detector->setObjcetsOutputFile(imagePath);
         detector->setObjcetsOutputDir(OUTPUP_VIW_FILES_DIR);
         std::ofstream sFile;
         sFile.open(OUTPUP_VIW_FILES_DIR +Files::slash()+ detector->getObjectsOutputFile() + ".viw");
@@ -138,9 +138,11 @@ void imageFileProcess(std::string imagePath, Flages imageFlage){
             detector->startDetection(cropedPath, nullBlob, foundFlage);
         }else if(imageFlage == Flages::drawnFlage){
             
-            cv::Mat objectsImage = cv::imread(cropedPath, cv::IMREAD_GRAYSCALE);
+            cv::Mat objectsImage = cv::imread(cropedPath);
             CropImage cObjects(objectsImage, 0);
+            
             std::vector<Blob> objectsBoxs;
+            
             cObjects.getOjectsCoordinates(objectsBoxs);
             
             // std::thread *imgThreads = new std::thread[objectsBoxs.size()];
@@ -155,7 +157,9 @@ void imageFileProcess(std::string imagePath, Flages imageFlage){
             //     (imgThreads+i)->join();
             // }
             // delete [] imgThreads;
-            cv::imwrite(cropedPath, objectsImage);   
+            
+            cv::imwrite(cropedPath, objectsImage);
+               
         }
     }else{
         std::cout << imagePath << " file not found." << std::endl;
@@ -164,7 +168,7 @@ void imageFileProcess(std::string imagePath, Flages imageFlage){
 
 void executeThread(cv::Mat objectsImage, int width, int height, Blob box){
     
-    cv::Mat emptyImage(height, width, CV_8UC1, cv::Scalar(255, 255, 255));
+    cv::Mat emptyImage(height, width, CV_8UC3, cv::Scalar(255, 255, 255));
     std::cerr << box.boundingRect << std::endl;
     cv::Mat obj = objectsImage(box.boundingRect);
     obj.copyTo(emptyImage(cv::Rect( box.boundingRect.x,  box.boundingRect.y, obj.cols, obj.rows)));

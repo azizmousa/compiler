@@ -23,13 +23,15 @@ bool maxArea(Blob b1, Blob b2){
 
 void CropImage::cropImageFrame(){
 
-     cv::Mat imgFrame1 = this->image;
+    //  cv::Mat imgFrame1 = this->image.clone;
     // char chCheckForEscKey = 0;
     std::vector<Blob> blobs;
-    cv::Mat imgFrame1Copy = imgFrame1.clone();
+    cv::Mat imgFrame1Copy = this->image.clone();
     cv::Mat imgDifference;
     cv::Mat imgThresh;
-    // cv::cvtColor(imgFrame1Copy, imgFrame1Copy, cv::COLOR_BGR2GRAY);
+    
+    cv::cvtColor(imgFrame1Copy, imgFrame1Copy, cv::COLOR_BGR2GRAY);
+    
     cv::GaussianBlur(imgFrame1Copy, imgFrame1Copy, cv::Size(5, 5), 0);
     
     double min, max;
@@ -37,7 +39,7 @@ void CropImage::cropImageFrame(){
     cv::minMaxLoc(imgFrame1Copy, &min, &max, &minp, &maxp);
     
     cv::adaptiveThreshold(imgFrame1Copy, imgThresh, 130 , cv::ADAPTIVE_THRESH_GAUSSIAN_C,
-     cv::THRESH_BINARY_INV, 11, 12);
+     cv::THRESH_BINARY_INV, 11, 5);
 
     // cv::Mat structuringElement3x3 = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3));
     cv::Mat structuringElement5x5 = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(5, 5));
@@ -59,6 +61,7 @@ void CropImage::cropImageFrame(){
     cv::Mat imgContours(imgThresh.size(), imgThresh.type(), SCALAR_BLACK);
 
     cv::drawContours(imgContours, contours, -1, SCALAR_WHITE, -1);
+
     for(int i =0; i<this->erodContoursNumber;++i)
         cv::erode(imgContours, imgContours, structuringElement9x9);
     
@@ -78,6 +81,10 @@ void CropImage::cropImageFrame(){
         if (possibleBlob.boundingRect.area() > 100 &&
             possibleBlob.boundingRect.width > 15 &&
             possibleBlob.boundingRect.height > 20) {
+                // possibleBlob.boundingRect.x -= 4;
+                // possibleBlob.boundingRect.y -= 4;
+                // possibleBlob.boundingRect.width += 4;
+                // possibleBlob.boundingRect.height += 4;
             blobs.push_back(possibleBlob);
         }
     }
