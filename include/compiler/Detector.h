@@ -43,7 +43,7 @@ private:
 
 public:
     Detector(std::vector<cv::dnn::Net> nets, std::vector<std::vector<std::string>> classes, 
-    std::string tepmPaht, float confThreshold = 0.49, float nmsThreshold = 0.04, 
+    std::string tepmPaht, float confThreshold = 0.30, float nmsThreshold = 0.04, 
     int inpWidth = 416, int inpHeight = 416);
     ~Detector();
 

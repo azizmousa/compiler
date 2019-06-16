@@ -38,6 +38,8 @@ Detector *detector;
 int main(int argc, char* argv[]){
 
     auto t1 = std::chrono::system_clock::now();
+    std::cout << "start compiling:" << std::endl;
+    std::cout << "--------------------" << std::endl;
     if(argc < 3){
         std::cout << "you should pass the input path" << std::endl;
         return 1;
@@ -78,6 +80,8 @@ int main(int argc, char* argv[]){
     std::cout << "finished computation at " << std::ctime(&end_time)
               << "elapsed time: " << elapsed_seconds.count() << "s" << std::endl;
 
+    std::cout << "end compiling:" << std::endl;
+    std::cout << "--------------------" << std::endl;
     return 0;
 }
 
