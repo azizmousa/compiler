@@ -1,6 +1,6 @@
-# Skitch Builder (compiler part)
+# Sketch Builder (compiler part)
 
-skitch builder is an application that use AI and computer Vision technologies to convert design skitch to real code in multiple programming langues, the compiler part is the part which responsible for read the skitch image and translate it to readable information
+sketch builder is an application that use AI and computer Vision technologies to convert design skitch to real code in multiple programming languages, the compiler part is the part which responsible for read the sketch image and translate it to readable information
 
 ## Getting Started
 
@@ -55,8 +55,8 @@ $ ./compiler [INPUT_TYPE][INIPUT_PATH][CONFIDANCE]
 ```
 
 1-[INPUT_TYPE] (required) :=> there are two parameters -p or -d
-	>use -p if you want detect the objects using nural network (fast but less acurate)
-	>use -d if you want detect the objects using image processing but it required symmetric image (time longer but more acurate) 
+	>use -p if you want detect the objects using nural network (fast but less accurate)
+	>use -d if you want detect the objects using image processing but it required symmetric image (time longer but more accurate) 
 
 2-[INPUT_PATH] (required):=> you can enter multiple image paths separated by space or path to directory the containe multiple images or just single image.
 
