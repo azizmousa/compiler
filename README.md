@@ -1,6 +1,6 @@
 # Sketch Builder (compiler part)
 
-sketch builder is an application that use AI and computer Vision technologies to convert design skitch to real code in multiple programming languages, the compiler part is the part which responsible for read the sketch image and translate it to readable information
+sketch builder is an application that use AI and computer Vision technologies to convert design sketch to real code in multiple programming languages, the compiler part is the part which responsible for read the sketch image and translate it to readable information
 
 ## Getting Started
 
