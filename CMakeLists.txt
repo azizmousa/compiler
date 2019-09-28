@@ -9,8 +9,8 @@ set(EXECUTABLE_OUTPUT_PATH "${PROJECT_SOURCE_DIR}/bin")
 file(GLOB SRC_PROJECT "src/*.cpp")
 
 set(CMAKE_CXX_FLAGS "-Wall -O2 -g -pthread")
-add_executable(compiler ${SRC_PROJECT})
 
+add_executable(compiler ${SRC_PROJECT})
 
 target_link_libraries(compiler ${OpenCV_LIBS})
 
