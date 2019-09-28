@@ -44,10 +44,23 @@ int main(int argc, char* argv[]){
         std::cout << "you should pass the input path" << std::endl;
         return 1;
     }
+
+    std::istringstream ss(argv[argc -1]);
+    double confidance;
+    
+    if(!(ss >> confidance)){
+        confidance = 0.30;
+    }else{
+        if(confidance > 1 || confidance < 0){
+            std::cout << "the confidance should be between [0:1]" << std::endl;
+            return 1;
+        }
+    }
+    
     
     try{
         loader = new Loader("weights", "names", "configurations");
-        detector = new Detector(loader->getAllNets(), loader->getAllClasses(), TEMP_PATH);
+        detector = new Detector(loader->getAllNets(), loader->getAllClasses(), TEMP_PATH, confidance);
         Files::initializeOutputDirectory(EMPTY_IMAGE_PATH);
         Files::initializeOutputDirectory(OUTPUP_VIW_FILES_DIR);
         Files::initializeOutputDirectory(TEMP_PATH);
@@ -57,7 +70,8 @@ int main(int argc, char* argv[]){
     }
     
     std::cout << argv[1] << std::endl;
-    
+
+ 
     if(std::string(argv[1]) == "-d" || std::string(argv[1]) == "--drawn")
         runOperation(argc, Flages::drawnFlage, argv);
     else if(std::string(argv[1]) == "-p" || std::string(argv[1]) == "--paper")
@@ -89,19 +103,22 @@ int main(int argc, char* argv[]){
 void runOperation(int end, Flages imageFlage, char *argv[]){
     for(int i =2; i<end; ++i){
         std::cerr << "itration: " <<i<< std::endl;
-        if(Files::is_file(argv[i])){
-            std::cerr << "file !!!!!!" << std::endl;
-            imageFileProcess(argv[i], imageFlage);
-        }else{
-            std::cerr << "folder !!!!!!" << std::endl;
-            std::vector<std::string> images;
-            Files::getDirFiles(argv[i], "", images);
-            std::cerr << "imageSize = " << images.size() << std::endl;
-            for(size_t j = 0; j< images.size() ;++j){
-                imageFileProcess(std::string(argv[i])+Files::slash()+images[j], imageFlage);
+        std::istringstream ss(argv[i]);
+        int testInp;
+        if(!(ss >> testInp)){
+            if(Files::is_file(argv[i])){
+                std::cerr << "file !!!!!!" << std::endl;
+                imageFileProcess(argv[i], imageFlage);
+            }else{
+                std::cerr << "folder !!!!!!" << std::endl;
+                std::vector<std::string> images;
+                Files::getDirFiles(argv[i], "", images);
+                std::cerr << "imageSize = " << images.size() << std::endl;
+                for(size_t j = 0; j< images.size() ;++j){
+                    imageFileProcess(std::string(argv[i])+Files::slash()+images[j], imageFlage);
+                }
             }
         }
-       
     }
 }
 
