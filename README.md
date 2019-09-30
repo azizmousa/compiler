@@ -45,7 +45,7 @@ $ cd bin
 
 ```
 $ ls
-	compiler configurations names weights
+compiler configurations names weights
 ```
 
 ## How to use the application
@@ -70,12 +70,12 @@ $ ./compiler [INPUT_TYPE][INIPUT_PATH][CONFIDANCE]
 $ ./compiler -p /home/Downloads/test.jpg 0.50
 ```
 
-## After run this command:
+## After runing this command:
 	1- you will find views dir include readable file called test.viw containe the detected objects inforamtion
 	2- you will find temp dir include processed images that show which object is detected and where "just for seen"
 
 ### Help Links
 
-*[the objects that involved to this project] (https://drive.google.com/open?id=1b-340IdraxEP1fVrbMghkT0Jri7GZ9Vy)
-*[testset] (https://drive.google.com/open?id=1ZSLnwHn2d6g6KblDj-P3Hp_Dm_IgQlbz)
-*[config zip] [REQUIRED] (https://drive.google.com/open?id=1YNuWDjgcsHkLr9Al1L7L0RHSYlqxe1RS)
+- [the objects that involved to this project] (https://drive.google.com/open?id=1b-340IdraxEP1fVrbMghkT0Jri7GZ9Vy)
+- [testset] (https://drive.google.com/open?id=1ZSLnwHn2d6g6KblDj-P3Hp_Dm_IgQlbz)
+- [config zip "REQUIRED"] (https://drive.google.com/open?id=1YNuWDjgcsHkLr9Al1L7L0RHSYlqxe1RS)
