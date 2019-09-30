@@ -70,7 +70,7 @@ $ ./compiler [INPUT_TYPE][INIPUT_PATH][CONFIDANCE]
 $ ./compiler -p /home/Downloads/test.jpg 0.50
 ```
 
-## After runing this command:
+## After running this command:
 	1- you will find views dir include readable file called test.viw containe the detected objects inforamtion
 	2- you will find temp dir include processed images that show which object is detected and where "just for seen"
 
