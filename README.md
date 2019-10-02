@@ -78,4 +78,4 @@ $ ./compiler -p /home/Downloads/test.jpg 0.50
 
 - [the objects that involved to this project] (https://drive.google.com/open?id=1b-340IdraxEP1fVrbMghkT0Jri7GZ9Vy)
 - [testset] (https://drive.google.com/open?id=1ZSLnwHn2d6g6KblDj-P3Hp_Dm_IgQlbz)
-- [config zip "REQUIRED"] (https://drive.google.com/open?id=1YNuWDjgcsHkLr9Al1L7L0RHSYlqxe1RS)
+- [config zip "REQUIRED"] (https://drive.google.com/file/d/1rXzQM9HWQt6BS5XkMAFigh2bdA8j2NEJ/view)
