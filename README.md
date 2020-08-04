@@ -82,4 +82,4 @@ $ ./compiler -p /home/Downloads/test.jpg 0.50
 
 
 ## Main Project:
-- [Sketch builder] (https://github.com/zezomousa101/Sketch-Builder)
+- [Sketch builder] (https://github.com/azizmousa/Sketch-Builder)
